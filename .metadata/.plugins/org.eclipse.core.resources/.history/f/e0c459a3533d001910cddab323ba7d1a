@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="308d83e9-099d-411c-a161-a8de0ad0ae13" basePath="${http.basePath}" >
+		<http:listener-connection host="${http.host}" port="${http.port}" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="cfac661f-cabf-4f73-ade1-c69eaf1ee255" file="Configurations/config.yaml" />
+	<flow name="validationexample1Flow" doc:id="c124d1b9-0ec0-4758-a9ba-ef6f1252a82e" >
+		<http:listener doc:name="Listener" doc:id="2af0d70d-6d00-4af9-9008-f110c68bf9f3" config-ref="HTTP_Listener_config" path="${http.path}" allowedMethods="GET">
+			<http:error-response >
+				<http:body ><![CDATA[#[%dw 2.0
+output application/json 
+--- 
+{
+	errorType:error.errorType,
+	error:error.errorMessage
+}]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<flow-ref doc:name="Flow Reference" doc:id="586c3df2-d6e0-4062-b60e-644eb5d8f39b" name="subProcess"/>
+		<logger level="INFO" doc:name="Logger" doc:id="3c972172-6025-4da2-b4dc-57c47ae9ae95" message="#[payload]"/>
+		<validation:is-empty-collection doc:name="Is empty collection" doc:id="c4bed8e3-2188-4c10-ada7-15727d6aed9c" message="Record not found exception occured">
+			<error-mapping sourceType="VALIDATION:NOT_EMPTY_COLLECTION" targetType="APP:RECORD_NOT_FOUND" />
+		</validation:is-empty-collection>
+		<logger level="INFO" doc:name="Logger" doc:id="6145fe7c-e9e7-43e5-82b7-ddc3e5cb3362" message="validation passes"/>
+	</flow>
+	<flow name="subProcess" doc:id="e5d47589-b1df-4709-9a38-6b1f5e349654" >
+		<ee:transform doc:name="Transform Message" doc:id="b53e8a31-2d5c-4fde-864c-3037d5d9b06c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[
+	{
+		"field1":"value1"
+	}
+]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

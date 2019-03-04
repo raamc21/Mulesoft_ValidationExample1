@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<http:listener-config name="HTTP_Conns" doc:name="HTTP Listener config" doc:id="308d83e9-099d-411c-a161-a8de0ad0ae13" basePath="${http.basePath}" >
+		<http:listener-connection host="${http.host}" port="${http.port}" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="cfac661f-cabf-4f73-ade1-c69eaf1ee255" file="Configurations/config.yaml" />
+	<flow name="validationexample1Flow" doc:id="c124d1b9-0ec0-4758-a9ba-ef6f1252a82e" >
+		<http:listener doc:name="Listener" doc:id="2af0d70d-6d00-4af9-9008-f110c68bf9f3" config-ref="HTTP_Conns" path="${http.path}" allowedMethods="GET">
+			<http:error-response statusCode="#[output application/java --- vars.httpStatusCode default 500]">
+				<http:body ><![CDATA[#[%dw 2.0
+output application/json 
+--- 
+{
+	errorType:error.errorType,
+	error:error.errorMessage
+}]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<flow-ref doc:name="subProcess" doc:id="586c3df2-d6e0-4062-b60e-644eb5d8f39b" name="subProcess"/>
+		<try doc:name="Try" doc:id="f86b5dab-e05e-46b4-a958-d9e616d2b92e" >
+			<validation:is-not-empty-collection doc:name="Is not empty collection" doc:id="76b6acb6-d021-4b13-8f0e-ddda25322424" message="Record not found exception occured" />
+			<error-handler >
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="041c5a80-51d2-41a5-80ab-ab93fe033815" type="VALIDATION:EMPTY_COLLECTION">
+					<set-variable value="404" doc:name="Set Htt Status Code" doc:id="b2151e93-aac2-4909-8cc8-7b38223886f6" variableName="httpStatusCode"/>
+				</on-error-propagate>
+			</error-handler>
+		</try>
+		<logger level="INFO" doc:name="Logger" doc:id="6145fe7c-e9e7-43e5-82b7-ddc3e5cb3362" message="validation passes"/>
+	</flow>
+	<flow name="subProcess" doc:id="e5d47589-b1df-4709-9a38-6b1f5e349654" >
+		<ee:transform doc:name="Transform Message" doc:id="b53e8a31-2d5c-4fde-864c-3037d5d9b06c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[
+]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="validationexample2_MultipleConditions" doc:id="1355bc2c-0536-4727-86e2-1f86497eccbd" >
+		<http:listener doc:name="ReceiveReq" doc:id="8a044556-1008-4659-a3a7-9ff19a09b8b4" config-ref="HTTP_Conns" path="${http.path2}"/>
+		<validation:all doc:name="All" doc:id="c85118c6-0d8f-4175-b07c-25c7298202f9" >
+			<error-mapping sourceType="VALIDATION:MULTIPLE" targetType="APP:MULTIPLE" />
+			<validation:is-null doc:name="Is null" doc:id="695d28a7-acac-4c58-90c1-58dd6f748b37" value="payload.id" message="id cannot be null"/>
+		</validation:all>
+	</flow>
+</mule>

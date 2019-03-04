@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="308d83e9-099d-411c-a161-a8de0ad0ae13" basePath="${http.basePath}" >
+		<http:listener-connection host="${http.host}" port="${http.port}" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="cfac661f-cabf-4f73-ade1-c69eaf1ee255" file="Configurations/config.yaml" />
+	<flow name="validationexample1Flow" doc:id="c124d1b9-0ec0-4758-a9ba-ef6f1252a82e" >
+		<http:listener doc:name="Listener" doc:id="2af0d70d-6d00-4af9-9008-f110c68bf9f3" config-ref="HTTP_Listener_config" path="${http.path}"/>
+	</flow>
+</mule>
